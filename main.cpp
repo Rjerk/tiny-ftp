@@ -18,7 +18,8 @@ int main(int argc, char** argv)
 
     ftpClient client(IP, Port);
     client.runClient();
-    client.runCommand();
+    while (true)
+        client.runCommand();
 
     return 0;
 }

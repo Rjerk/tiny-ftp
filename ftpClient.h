@@ -5,6 +5,8 @@
 #include <map>            // map
 #include <vector>
 #include <sstream>
+#include <fstream>
+#include <iomanip>        // setprecision
 
 #include <cstdio>         // perror
 #include <utmp.h>         // stuct utmp
@@ -29,10 +31,10 @@ using std::endl;
 using std::cerr;
 using std::vector;
 using std::map;
+using std::ofstream;
 
 class ftpClient {
 public:
-    // friend class Shell;
     ftpClient();
     ftpClient(string, int);
     ~ftpClient();

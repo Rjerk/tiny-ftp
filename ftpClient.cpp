@@ -2,7 +2,7 @@
 #include <string>
 
 enum cmdType {
-    HELP = 5000, GET, PUT, LS, OPEN, CLOSE, QUIT, CD, PWD
+    HELP, GET, PUT, LS, OPEN, CLOSE, QUIT, CD, PWD
 };
 
 map<string, cmdType> cmdMap;
@@ -28,6 +28,7 @@ ftpClient::~ftpClient()
 
 void ftpClient::init() const
 {
+    cmdMap["help"] = HELP;
     cmdMap["get"] = GET;
     cmdMap["put"] = PUT;
     cmdMap["ls"] = LS;
@@ -72,7 +73,6 @@ int ftpClient::getReplyFromServer()
     bzero(buf, sizeof(buf));
     int len = read(clntSock, buf, sizeof(buf));
     if (len > 0) replymsg = string(buf);
-    // cout << replymsg << endl;
     return len;
 }
 
@@ -82,7 +82,7 @@ void ftpClient::runClient()
     cout << "Connected to " << ip << "." << endl;
 
     if (getReplyFromServer() > 0) {
-        // replyMessage: 220 (vsFTPd 3.0.3)
+        // 220 (vsFTPd 3.0.3)
         cout << getReplyMessage();
         replyCode = getReplyCode();
     }
@@ -186,10 +186,9 @@ bool ftpClient::isConnected()
 
 void ftpClient::runCommand()
 {
-    //getPasv();
     cout << "ftp> ";
     getline(cin, cmd);
-    vector<string>(instructions).swap(instructions);
+    vector<string>().swap(instructions);
     std::stringstream cmdstring(cmd);
     string token;
     while (getline(cmdstring, token, ' '))
@@ -217,16 +216,12 @@ void ftpClient::getPasv()
     // port address this server is listening on.
     if (sendServerCmd("PASV") > 0) {
         if (getReplyFromServer() > 0) {
-            //cout << "getPasv(): replymsg: " << getReplyMessage();
             replyCode = getReplyCode();
-            //cout << "getPasv() replycode: " << replyCode << endl;
         }
     }
     if (replyCode == 227) {
         int port = getPort(replymsg);
-        //cout << "getPasv() port: " << port << endl;
         if ((pasvSock = openPasvSock(port)) > 0) {
-            //cout << "openPasvSock() OK! pasvSock: " << pasvSock << endl;
             isPasv = true;
             return ;
         } else {
@@ -250,24 +245,7 @@ bool ftpClient::pasvReady()
 
 int ftpClient::openPasvSock(int _port)
 {
-    //cout << "openPasvSock(): ip: " << ip << " port: " << _port << endl;
     return Connect(ip, _port);
-    /*
-    struct hostent* host = gethostbyname(ip.c_str());
-    sockaddr_in pasvAddr;
-    bzero((void*) &pasvAddr, sizeof(pasvAddr));
-    pasvAddr.sin_family = AF_INET;
-    pasvAddr.sin_port = htons(_port);
-    pasvAddr.sin_addr.s_addr = inet_addr(inet_ntoa(*(struct in_addr*)*host->h_addr_list));
-    //inet_pton(AF_INET, ip.c_str(), &pasvAddr.sin_addr);
-    pasvSock = socket(AF_INET, SOCK_STREAM, 0);
-    if (pasvSock == -1) error_Exit("socket() error!");
-    cout << "pasvSock: " << pasvSock << endl;
-    cout << "clntSock: " << clntSock << endl;
-    if (connect(pasvSock, (struct sockaddr*) &pasvAddr, sizeof(pasvAddr)) == -1)
-        error_Exit("connect() error!");
-    */
-    //return pasvSock;
 }
 
 // 227 Entering Passive Mode (h1,h2,h3,h4,p1,p2).
@@ -284,21 +262,122 @@ int ftpClient::getPort(const string& msg)
     char* p2 = (char*)(vs[vs.size()-1]).c_str();
     int port2 = 0;
     port2 = atoi(strtok(p2, ")"));
-    //cout << "getPort(): port1: " << port1 << " port2: " << port2 << endl;
     return 256 * port1 + port2;
 }
 
 void ftpClient::cmd_help()
 {
     if (instructions.size() == 1) {
-        std::cout << "Command may be abbreviated.  Command are:" << std::endl;
-        std::cout << "";
+        std::cout << "Commands may be abbreviated.  Commands are:" << std::endl;
+        std::cout << "cd\t\tclose\t\tget\t\thelp\t\tls\nopen\t\tput\t\tpwd\t\tquit\n";
+    } else if (instructions.size() == 2) {
+		switch(cmdMap[instructions[1]]) {
+		    case CD:
+		        cout << "cd\t\tchange remote working directory" << endl;
+		        break;
+		    case CLOSE:
+		        cout << "close\t\tterminate ftp session" << endl;
+		        break;
+		    case GET:
+		        cout << "get\t\treceive file" << endl;
+		        break;
+		    case HELP:
+		        cout << "help\t\tprint local help information" << endl;
+		        break;
+		    case LS:
+		        cout << "ls\t\tlist contents of remote directory" << endl;
+		        break;
+		    case OPEN:
+		        cout << "open\t\tconnect to remote ftp" << endl;
+		        break;
+		    case PUT:
+		        cout << "put\t\tsend one file" << endl;
+		        break;
+		    case PWD:
+		        cout << "pwd\t\tprint working directory on remote machine" << endl;
+		        break;
+		    case QUIT:
+		        cout << "quit\t\tterminate ftp session and exit" << endl;
+		        break;
+		    default:
+		        error_Msg("?Invalid help command "+instructions[1]);
+		}
     }
 }
 
 void ftpClient::cmd_get()
 {
+    if (!isConnected()) {
+        error_Msg("Not connected.");
+        return ;
+    }
+    string remotefile;
+    string localfile;
 
+    if (instructions.size() == 1) {
+        cout << "(remote-file) ";
+        getline(cin, remotefile);
+        cout << "(local-file) ";
+        getline(cin, localfile);
+    } else if (instructions.size() == 2) {
+        remotefile = instructions[1];
+        localfile = instructions[1];
+    } else if (instructions.size() == 3) {
+        remotefile = instructions[1];
+        localfile = instructions[2];
+    }
+    if (remotefile.size() == 0) {
+        error_Msg("usage: get remote-file [ local-file ]");
+        return ;
+    }
+    cout << "local: " << localfile << " remote: " << remotefile << endl;
+    if (sendServerCmd("TYPE I") > 0) {
+        if (getReplyFromServer() > 0) {
+            replyCode = getReplyCode();
+        }
+    }
+    ofstream outfile(localfile, ofstream::out); // need complie -std=c++11
+    if (!outfile.good()) {
+        error_Msg("local: " + localfile + ": Permission denied");
+        return ;
+    }
+
+    getPasv();
+    if (!pasvReady())
+        return ;
+
+    if (sendServerCmd("RETR " + remotefile) > 0) {
+        if (getReplyFromServer() > 0) {
+            // 150 Opening BINARY mode data connection for <remotefile> (xx bytes).
+            cout << getReplyMessage();
+            replyCode = getReplyCode();
+        }
+
+    if (replyCode == 150) {
+        int status;
+        int pid = fork();
+        if (pid < 0) {
+            error_Exit("fork() error!");
+        } else if (pid == 0) {
+            struct timeval start, end;
+            gettimeofday(&start, NULL);
+            int s = getAsciiMsgFromServer();
+            gettimeofday(&end, NULL);
+            if (getReplyFromServer() > 0) {
+                // 226 Transfer Complete
+                cout << getReplyMessage();
+                replyCode = getReplyCode();
+            }
+			double transTime = ((end.tv_usec - start.tv_usec) + 1000000 * (end.tv_sec - start.tv_sec)) / 1000000.0;
+            if (replyCode == 226) {
+                cout << s << " bytes received in " << std::setprecision(5) << transTime << " secs ("
+                     << std::setprecision(5) << s / transTime / 1024 << " kB/s)" << endl;
+            }
+            exit(0);
+        } else if (pid > 0) {
+            wait(&status);
+        }
+    }
 }
 
 void ftpClient::cmd_put()
@@ -309,7 +388,6 @@ void ftpClient::cmd_put()
 int ftpClient::getAsciiMsgFromServer()
 {
     struct pollfd ufds;
-    //cout << "getAsciiMsgFromServer(): pasvSock: " << pasvSock << endl;
     ufds.fd = pasvSock;
     ufds.events = POLLIN; // There is data to read
     ufds.revents = 0;
@@ -340,15 +418,12 @@ void ftpClient::cmd_ls()
         return ;
     int status;
     int pid;
-    //cout << "pacvSock: " << pasvSock << endl;
     if ((pid = fork()) < 0) {
         error_Exit("fork() error!");
     } else if (pid == 0) {
         if (getAsciiMsgFromServer() > 0) {
             cout << getAsciiMsg();
         }
-        shutdown(pasvSock, SHUT_WR);
-        close(pasvSock);
         exit(0);
     } else if (pid > 0) {
         if (sendServerCmd("LIST\r\n") > 0) {
@@ -365,7 +440,17 @@ void ftpClient::cmd_ls()
 
 void ftpClient::cmd_pwd()
 {
-
+    if (!isConnected()) {
+        error_Msg("Not connected.");
+        return ;
+    }
+    if (sendServerCmd("PWD") > 0) {
+        if (getReplyFromServer() > 0) {
+            cout << getReplyMessage();
+            replyCode = getReplyCode();
+        }
+    }
+    // replyCode == 257?
 }
 
 void ftpClient::cmd_open()
@@ -385,6 +470,36 @@ void ftpClient::cmd_quit()
 
 void ftpClient::cmd_cd()
 {
+    if (!isConnected()) {
+        error_Exit("Not connected.");
+        return ;
+    }
+    string directory;
+    if (instructions.size() == 1) {
+        cout << "(remote-directory) ";
+        getline(cin, directory);
+    } else {
+        directory = instructions[1];
+    }
+
+    if (directory.size() == 0) {
+        error_Exit("usage: cd remote-directory");
+        return ;
+    }
+
+    // CWD: This command allows the user to work with a different
+    // directory or dataset for file storage or retrieval without
+    // altering his login or accounting information.  Transfer
+    // parameters are similarly unchanged.  The argument is a
+    // pathname specifying a directory or other system dependent
+    // file group designator.
+    // CWD  <SP> <pathname> <CRLF>
+    if (sendServerCmd("CWD " + directory + "\r\n") > 0) {
+        if (getReplyFromServer() > 0) {
+            cout << getReplyMessage();
+            replyCode = getReplyCode();
+        }
+    }
 
 }
 
