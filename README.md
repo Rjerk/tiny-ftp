@@ -2,9 +2,25 @@
 
 ## Complete:
 - ls
+- pwd
+- get
+- cd
+- help
 
 ## Imcomplete:
-- cd
-- pwd
-...
+- put
+- open
+- close
+- quit
+- ...
 - more and more
+
+## Compile
+``
+sh build.sh
+```
+
+## Run
+``
+./ftp 127.0.0.1 21
+```
