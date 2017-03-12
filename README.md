@@ -16,11 +16,11 @@
 - more and more
 
 ## Compile
-``
+```
 sh build.sh
 ```
 
 ## Run
-``
+```
 ./ftp 127.0.0.1 21
 ```
