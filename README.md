@@ -1,4 +1,4 @@
-# A simple ftp client using cpp.
+# A simple FTP client using cpp.
 
 ## Complete:
 - ls
