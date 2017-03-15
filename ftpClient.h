@@ -32,6 +32,7 @@ using std::cerr;
 using std::vector;
 using std::map;
 using std::ofstream;
+using std::ifstream;
 
 class ftpClient {
 public:
@@ -44,6 +45,8 @@ private:
     void getPasv();
     bool pasvReady();
     int getAsciiMsgFromServer();
+    int receiveFile();
+    int sendFile();
     string getAsciiMsg();
     int openPasvSock(int);
 	void init() const;
@@ -78,6 +81,7 @@ private:
     string ip;
     int port;
     int clntSock;
+	int fileSock;
     bool islogin;
     int replyCode;
     string replymsg;
