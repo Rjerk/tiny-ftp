@@ -6,9 +6,9 @@
 - get
 - cd
 - help
+- put
 
 ## Imcomplete:
-- put
 - open
 - close
 - quit
@@ -71,3 +71,9 @@ help
 pwd
 ```
 
+### put
+- send one file
+- Usage:
+```
+put [local-file] [remote-file]
+```
