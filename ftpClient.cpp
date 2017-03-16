@@ -2,7 +2,17 @@
 #include <string>
 
 enum cmdType {
-    HELP = 500, GET, PUT, LS, OPEN, CLOSE, QUIT, CD, PWD
+    HELP = 500,
+    GET,
+    PUT,
+    LS,
+    OPEN,
+    CLOSE,
+    QUIT,
+    CD,
+    PWD,
+    DELETE,
+    SYST
 };
 
 
@@ -33,14 +43,13 @@ void ftpClient::init() const
     cmdMap["get"] = GET;
     cmdMap["put"] = PUT;
     cmdMap["ls"] = LS;
-    cmdMap["dir"] = LS;
     cmdMap["open"] = OPEN;
     cmdMap["close"] = CLOSE;
-    cmdMap["disconnect"] = CLOSE;
     cmdMap["quit"] = QUIT;
-    cmdMap["exit"] = QUIT;
     cmdMap["cd"] = CD;
     cmdMap["pwd"] = PWD;
+    cmdMap["delete"] = DELETE;
+    cmdMap["system"] = SYST;
 }
 
 
@@ -62,7 +71,7 @@ int ftpClient::Connect(const string& _ip, int _port)
     return _clntSock;
 }
 
-void ftpClient::disconnect()
+void ftpClient::Disconnect()
 {
     close(clntSock);
 }
@@ -97,8 +106,12 @@ void ftpClient::runClient()
         if (islogin) {
             cout << "Remote system type is UNIX." << endl;
             cout << "Using binary mode to transfer files." << endl;
+            return ;
+        } else {
+            cout << "Login failed." << endl;
         }
     }
+    Disconnect();
 }
 
 int ftpClient::getReplyCode()
@@ -138,11 +151,11 @@ string ftpClient::getUserName()
 void ftpClient::loginServer()
 {
     cout << "Name (" << ip << ":" << getUserName() << "): ";
-    string account;
+    string username;
     string password;
-    getline(cin, account);
-    string user = "USER " + account;
-    if (sendServerCmd(user) > 0) {
+    getline(cin, username);
+    if (username.size() == 0) username = " ";
+    if (sendServerCmd("USER " + username) > 0) {
         if (getReplyFromServer() > 0) {
             // reply: 331 Please specify the password.
             cout << getReplyMessage();
@@ -160,17 +173,8 @@ void ftpClient::loginServer()
                 replyCode = getReplyCode();
                 if (replyCode == 230)
                     islogin = true;
-                else
-                    islogin = false;
-                return ;
             }
-        } else {
-            islogin = false;
-            return ;
         }
-    } else {
-        islogin = false;
-        return ;
     }
 }
 
@@ -184,32 +188,34 @@ int ftpClient::sendServerCmd(const string& cmd)
     return write(clntSock, buf, len);
 }
 
-bool ftpClient::isConnected()
-{
-    return true;
-}
-
 void ftpClient::runCommand()
 {
-    cout << "ftp> ";
-    getline(cin, cmd);
+    do {
+        cout << "ftp> ";
+        getline(cin, cmd);
+    } while (cmd.size() == 0);
+
     vector<string>().swap(instructions);
+
     std::stringstream cmdstring(cmd);
     string token;
     while (getline(cmdstring, token, ' '))
         instructions.push_back(token);
     string keyword = instructions[0];
+
     switch(cmdMap[keyword]) {
-        case HELP:  cmd_help();  break;
-        case GET:   cmd_get();   break;
-        case PUT:   cmd_put();   break;
-  		case LS:    cmd_ls();    break;
-        case PWD:   cmd_pwd();   break;
-  		case OPEN:  cmd_open();  break;
-      	case CLOSE: cmd_close(); break;
-		case QUIT:  cmd_quit();  break;
-        case CD:    cmd_cd();    break;
-		default:    error_Msg("?Invalid command");
+        case HELP:   cmd_help();    break;
+        case GET:    cmd_get();     break;
+        case PUT:    cmd_put();     break;
+        case DELETE: cmd_delete();  break;
+        case SYST:   cmd_system();  break;
+  		case LS:     cmd_ls();      break;
+        case PWD:    cmd_pwd();     break;
+  		case OPEN:   cmd_open();    break;
+      	case CLOSE:  cmd_close();   break;
+		case QUIT:   cmd_quit();    break;
+        case CD:     cmd_cd();      break;
+		default:     error_Msg("?Invalid command");
     }
 }
 
@@ -217,9 +223,9 @@ void ftpClient::cmd_help()
 {
     if (instructions.size() == 1) {
         std::cout << "Commands may be abbreviated.  Commands are:" << std::endl;
-        std::cout << "cd\t\tclose\t\tget\t\thelp\t\tls\nopen\t\tput\t\tpwd\t\tquit\n";
+        std::cout << "cd\t\tclose\t\tget\t\tdelete\t\tsystem\nhelp\t\tls\t\topen\t\tput\t\tpwd\nquit\n";
     } else if (instructions.size() == 2) {
-		switch(cmdMap[instructions[1]]) {
+	    switch(cmdMap[instructions[1]]) {
 		    case CD:
 		        cout << "cd\t\tchange remote working directory" << endl;
 		        break;
@@ -229,6 +235,12 @@ void ftpClient::cmd_help()
 		    case GET:
 		        cout << "get\t\treceive file" << endl;
 		        break;
+            case DELETE:
+                cout << "delete\t\tdelete remote file" << endl;
+                break;
+            case SYST:
+                cout << "system\t\tshow remote system type" << endl;
+                break;
 		    case HELP:
 		        cout << "help\t\tprint local help information" << endl;
 		        break;
@@ -249,13 +261,52 @@ void ftpClient::cmd_help()
 		        break;
 		    default:
 		        error_Msg("?Invalid help command "+instructions[1]);
-		}
+        }
+    }
+}
+
+void ftpClient::cmd_delete()
+{
+    if (!isConn) {
+        error_Msg("Not connected.");
+        return ;
+    }
+    string remotefile;
+    if (instructions.size() == 1) {
+        cout << "(remote-file) ";
+        getline(cin, remotefile);
+    } else if (instructions.size() == 2) {
+        remotefile = instructions[1];
+    }
+
+    if (remotefile.size() == 0) {
+        error_Msg("usage: delete remote-file");
+        return ;
+    }
+
+    if (sendServerCmd("DELE " + remotefile) > 0) {
+        if (getReplyFromServer() > 0) {
+            cout << getReplyMessage();
+        }
+    }
+}
+
+void ftpClient::cmd_system()
+{
+    if (!isConn) {
+        error_Msg("Not connected.");
+        return ;
+    }
+    if (sendServerCmd("SYST") > 0) {
+        if (getReplyFromServer() > 0) {
+            cout << getReplyMessage();
+        }
     }
 }
 
 void ftpClient::cmd_get()
 {
-    if (!isConnected()) {
+    if (!isConn) {
         error_Msg("Not connected.");
         return ;
     }
@@ -306,38 +357,29 @@ void ftpClient::cmd_get()
             error_Msg("local: " + localfile + ": Permission denied");
             return ;
         }
-        int status;
-        int pid = fork();
-        if (pid < 0) {
-            error_Exit("fork() error!");
-        } else if (pid == 0) {
-            struct timeval start, end;
-            gettimeofday(&start, NULL);
-            int s = receiveFile();
-            gettimeofday(&end, NULL);
-            if (getReplyFromServer() > 0) {
-                // 226 Transfer Complete
-                cout << getReplyMessage();
-                replyCode = getReplyCode();
-            }
-            double transTime = ((end.tv_usec - start.tv_usec)
-                    + 1000000 * (end.tv_sec - start.tv_sec)) / 1000000.0;
-            if (replyCode == 226) {
-                cout << s << " bytes received in "
-                    << std::setprecision(5) << transTime
-                    << " secs (" << std::setprecision(5)
-                    << s / transTime / 1024 << " kB/s)" << endl;
-            }
-            exit(0);
-        } else if (pid > 0) {
-            wait(&status);
+        struct timeval start, end;
+        gettimeofday(&start, NULL);
+        int s = receiveFile();
+        gettimeofday(&end, NULL);
+        if (getReplyFromServer() > 0) {
+        // 226 Transfer Complete
+        cout << getReplyMessage();
+        replyCode = getReplyCode();
+        }
+        double transTime = ((end.tv_usec - start.tv_usec)
+            + 1000000 * (end.tv_sec - start.tv_sec)) / 1000000.0;
+        if (replyCode == 226) {
+            cout << s << " bytes received in "
+                 << std::setprecision(5) << transTime
+                 << " secs (" << std::setprecision(5)
+                 << s / transTime / 1024 << " kB/s)" << endl;
         }
     }
 }
 
 void ftpClient::cmd_put()
 {
-	if (!isConnected()) {
+	if (!isConn) {
 		error_Msg("Not Connected.");
 		return ;
 	}
@@ -395,14 +437,14 @@ void ftpClient::cmd_put()
     }
 
     if (replyCode == 150) {
-    	struct timeval start, end;
+	    struct timeval start, end;
 		gettimeofday(&start, NULL);
 		int s = sendFile();
 		gettimeofday(&end, NULL);
 		if (getReplyFromServer() > 0) {
-		   // 226 Transfer Complete
-		    cout << getReplyMessage();
-		    replyCode = getReplyCode();
+			// 226 Transfer Complete
+			cout << getReplyMessage();
+			replyCode = getReplyCode();
 		}
 		double transTime = ((end.tv_usec - start.tv_usec)
 			+ 1000000 * (end.tv_sec - start.tv_sec)) / 1000000.0;
@@ -412,11 +454,19 @@ void ftpClient::cmd_put()
 		         << std::setprecision(5)
 				 << s / transTime / 1024 << " kB/s)" << endl;
 		}
-    }
+	}
 }
 
 void ftpClient::cmd_ls()
 {
+    if (!islogin) {
+        error_Msg("530 Please login with USER and PASS");
+        return ;
+    }
+    if (!isConn) {
+        error_Msg("Not connected.");
+        return ;
+    }
     getPasv();
     if (!pasvReady())
         return ;
@@ -444,12 +494,24 @@ void ftpClient::cmd_ls()
 
 void ftpClient::cmd_close()
 {
+    if (!isConn) {
+        error_Msg("Not connected.");
+        return ;
+    }
+    if (sendServerCmd("QUIT") > 0) {
+        if (getReplyFromServer() > 0) {
+            // 221 Goodbye
+            cout << getReplyMessage();
+        }
+    }
+    isConn = false;
+    Disconnect();
 
 }
 
 void ftpClient::cmd_pwd()
 {
-    if (!isConnected()) {
+    if (!isConn) {
         error_Msg("Not connected.");
         return ;
     }
@@ -464,17 +526,32 @@ void ftpClient::cmd_pwd()
 
 void ftpClient::cmd_open()
 {
-
+    if (isConn) {
+        error_Msg("Already connected to " + ip + ", use close first.");
+        return ;
+    }
+    if (instructions.size() == 2) {
+        ip = instructions[1];
+    } else {
+        cout << "(to) ";
+        getline(cin, ip);
+    }
+    runClient();
 }
 
 void ftpClient::cmd_quit()
 {
-
+    if (isConn) {
+        cmd_close();
+        return ;
+    } else {
+        exit(0);
+    }
 }
 
 void ftpClient::cmd_cd()
 {
-    if (!isConnected()) {
+    if (!isConn) {
         error_Exit("Not connected.");
         return ;
     }
@@ -487,7 +564,7 @@ void ftpClient::cmd_cd()
     }
 
     if (directory.size() == 0) {
-        error_Exit("usage: cd remote-directory");
+        error_Msg("usage: cd remote-directory");
         return ;
     }
 

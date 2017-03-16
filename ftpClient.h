@@ -50,9 +50,8 @@ private:
     string getAsciiMsg();
     int openPasvSock(int);
 	void init() const;
-    bool isConnected();
     int Connect(const string&, int);
-    void disconnect();
+    void Disconnect();
     int getReplyFromServer();
     int getReplyCode();
     string getReplyMessage();
@@ -71,6 +70,8 @@ private:
     void cmd_close();
     void cmd_quit();
     void cmd_cd();
+    void cmd_delete();
+    void cmd_system();
 	bool isConn;
     bool isPasv;
     int pasvSock;
