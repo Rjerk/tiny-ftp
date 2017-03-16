@@ -414,7 +414,6 @@ void ftpClient::cmd_put()
             replyCode = getReplyCode();
         }
     }
-
     if (replyCode != 200) {
         error_Msg(replymsg);
         return ;

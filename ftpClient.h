@@ -5,7 +5,6 @@
 #include <map>            // map
 #include <vector>
 #include <sstream>
-#include <fstream>
 #include <iomanip>        // setprecision
 
 #include <cstdio>         // perror
@@ -61,6 +60,14 @@ private:
     string getUserName();
     void parseCmd();
 private:
+    string ip;
+    int port;
+    int clntSock;
+	int fileSock;
+    bool islogin;
+    int replyCode;
+    string replymsg;
+private:
     void cmd_help();
     void cmd_get();
     void cmd_put();
@@ -72,18 +79,11 @@ private:
     void cmd_cd();
     void cmd_delete();
     void cmd_system();
+private:
 	bool isConn;
     bool isPasv;
     int pasvSock;
     string asciiMsg;
     string cmd;
     vector<string> instructions;
-private:
-    string ip;
-    int port;
-    int clntSock;
-	int fileSock;
-    bool islogin;
-    int replyCode;
-    string replymsg;
 };
