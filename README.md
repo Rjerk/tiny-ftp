@@ -7,11 +7,16 @@
 - cd
 - help
 - put
-
-## Imcomplete:
 - open
 - close
 - quit
+- delete
+- system
+
+## Imcomplete:
+- mkdir
+- rmdir
+- rename
 - ...
 - more and more
 
@@ -76,4 +81,39 @@ pwd
 - Usage:
 ```
 put [local-file] [remote-file]
+```
+
+### open
+- connect to remote ftp
+- Usage:
+```
+open [hostname]
+```
+
+### close
+- terminate ftp session
+- Usage:
+```
+close
+```
+
+### quit
+- terminate ftp session and exit
+- Usage:
+```
+quit
+```
+
+### delete
+- delete remote file
+- Usage:
+```
+delete [remote-file]
+```
+
+### system
+- show remote system type
+- Usage:
+```
+system
 ```
