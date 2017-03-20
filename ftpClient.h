@@ -22,6 +22,7 @@
 #include <sys/uio.h>      // writev
 #include <sys/wait.h>     // wait
 #include <poll.h>         // pollfd
+#include <termios.h>	  // termios
 
 using std::string;
 using std::cout;
@@ -59,6 +60,8 @@ private:
     int sendServerCmd(const string&);
     string getUserName();
     void parseCmd();
+	void hideInput();
+	void showInput();
 private:
     string ip;
     int port;

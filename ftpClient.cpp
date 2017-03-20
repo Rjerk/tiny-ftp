@@ -164,7 +164,10 @@ void ftpClient::loginServer()
     }
     if (replyCode == 331) {
         cout << "Password: ";
+		hideInput();
         getline(cin, password);
+		showInput();
+		cout << "\n";
         string passwd = "PASS " + password;
         if (sendServerCmd(passwd) > 0) {
             if (getReplyFromServer() > 0) {
@@ -711,4 +714,19 @@ int ftpClient::sendFile()
 string ftpClient::getAsciiMsg()
 {
     return asciiMsg;
+}
+
+void ftpClient::hideInput()
+{
+	termios tty;
+	tcgetattr(STDIN_FILENO, &tty);
+	tty.c_lflag &= ~ECHO;
+	tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
+
+void ftpClient::showInput() {
+    termios tty;
+    tcgetattr(STDIN_FILENO, &tty);
+    tty.c_lflag |= ECHO;
+    tcsetattr(STDIN_FILENO, TCSANOW, &tty);
 }
