@@ -24,7 +24,7 @@
 ```
 $ git clone https://github.com/Rjerk/ftp-client.git
 $ cd ftp-client
-$ sh build.sh
+$ ./build.sh
 ```
 
 ## Run && Login
