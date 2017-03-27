@@ -1,6 +1,6 @@
 # A simple ftp client using cpp.
 
-## Complete:
+## Command:
 - ls
 - pwd
 - get
