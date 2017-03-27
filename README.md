@@ -1,4 +1,4 @@
-# A simple FTP client using cpp.
+# A simple ftp client using cpp.
 
 ## Complete:
 - ls
@@ -13,16 +13,18 @@
 - delete
 - system
 
-## Imcomplete:
+## TODO:
 - mkdir
 - rmdir
 - rename
 - ...
 - more and more
 
-## Compile
+## Build
 ```
-sh build.sh
+$ git clone https://github.com/Rjerk/ftp-client.git
+$ cd ftp-client
+$ sh build.sh
 ```
 
 ## Run && Login
