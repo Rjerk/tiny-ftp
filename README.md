@@ -1,6 +1,6 @@
-# A simple FTP client using cpp.
+# A simple ftp client using cpp.
 
-## Complete:
+## Command:
 - ls
 - pwd
 - get
@@ -13,7 +13,7 @@
 - delete
 - system
 
-## Imcomplete:
+## TODO:
 - mkdir
 - rmdir
 - rename
