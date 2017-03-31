@@ -1,3 +1,3 @@
 #!/bin/bash
 
-g++ -std=c++11 -O -Wall error.cpp ftpClient.cpp main.cpp -o ftp
+g++ -O -Wall -std=c++11 main.cpp ftpClient.cpp userPI.cpp error.cpp utility.cpp -o ftp
