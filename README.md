@@ -1,6 +1,7 @@
 # A simple ftp client using cpp.
 
 ## Command:
+
 - ls
 - pwd
 - get
@@ -14,6 +15,7 @@
 - system
 
 ## TODO:
+
 - mkdir
 - rmdir
 - rename
@@ -21,13 +23,17 @@
 - more and more
 
 ## Build
+
 ```
 $ git clone https://github.com/Rjerk/ftp-client.git
 $ cd ftp-client
-$ ./build.sh
+$ make
 ```
 
 ## Run && Login
+
+If ftp server is ready:
+
 ```
 ./ftp 127.0.0.1 21
 Connected to 127.0.0.1.
