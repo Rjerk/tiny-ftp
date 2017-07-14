@@ -14,6 +14,8 @@
 #include <cstdio>
 #include "error.h"
 
+namespace ftpclient {
+
 using std::string;
 
 int Connect(string, int);
@@ -23,5 +25,14 @@ string getUserName();
 void hideInput();
 
 void showInput();
+
+template <typename To, typename From>
+inline
+To implicit_cast(const From& f)
+{
+    return f;
+}
+
+}
 
 #endif

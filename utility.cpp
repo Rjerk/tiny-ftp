@@ -1,5 +1,7 @@
 #include "utility.h"
 
+namespace ftpclient {
+
 int Connect(string _ip, int _port)
 {
 	struct hostent* host = gethostbyname(_ip.c_str());
@@ -50,4 +52,6 @@ void showInput()
     tcgetattr(STDIN_FILENO, &tty);
     tty.c_lflag |= ECHO;
     tcsetattr(STDIN_FILENO, TCSANOW, &tty);
+}
+
 }

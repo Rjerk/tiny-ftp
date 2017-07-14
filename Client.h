@@ -1,10 +1,10 @@
-#ifndef FTP_CLIENT_H
-#define FTP_CLIENT_H
+#ifndef CLIENT_H
+#define CLIENT_H
 
 #include <iostream>       // cin, cout, cend
 #include <string>         // string
 #include <cstring>        // strtok
-#include <map>            // map
+#include <unordered_map>  // unordered_map
 #include <vector>
 #include <sstream>
 #include <iomanip>        // setprecision
@@ -13,7 +13,7 @@
 #include <unistd.h>       // read, write, close, getlogin_r
 #include <wait.h>
 
-#include "userPI.h"
+#include "userFTP.h"
 #include "error.h"
 #include "utility.h"
 
@@ -22,12 +22,13 @@ using std::cout;
 using std::cin;
 using std::endl;
 using std::vector;
-using std::map;
 
-class ftpClient {
+namespace ftpclient {
+
+class Client : noncopyable {
 public:
-    ftpClient(string, int);
-    ~ftpClient();
+    Client(string, int);
+    ~Client();
     void runClient();
     bool isRunning();
     void runPI();
@@ -56,7 +57,9 @@ private:
     int clntSock;
 	vector<string> instructions;
 private:
-	userPI pi;
+	userFTP pi;
 };
+
+}
 
 #endif

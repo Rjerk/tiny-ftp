@@ -1,4 +1,6 @@
-#include "ftpClient.h"
+#include "Client.h"
+
+namespace ftpclient {
 
 enum cmdType {
     HELP = 500,
@@ -14,34 +16,28 @@ enum cmdType {
     SYST
 };
 
-map<string, cmdType> cmdMap;
+std::unordered_map<string, cmdType> cmdMap = {
+	{ "help", HELP },     { "get", GET },   { "put", PUT },
+	{ "ls", LS },         { "open", OPEN }, { "close", CLOSE },
+	{ "quit", QUIT },     { "cd", CD },     { "pwd", PWD },
+	{ "delete", DELETE }, { "system", SYST }
+};
 
-ftpClient::ftpClient(string _ip, int _port):
+Client::Client(string _ip, int _port):
     ip(_ip), port(_port), running(true), connected(false), clntSock(-1)
 {
-    init();
 }
 
-ftpClient::~ftpClient()
+Client::~Client()
+{
+	close(clntSock);
+}
+
+void Client::init()
 {
 }
 
-void ftpClient::init()
-{
-	cmdMap["help"] = HELP;
-    cmdMap["get"] = GET;
-    cmdMap["put"] = PUT;
-    cmdMap["ls"] = LS;
-    cmdMap["open"] = OPEN;
-    cmdMap["close"] = CLOSE;
-    cmdMap["quit"] = QUIT;
-    cmdMap["cd"] = CD;
-    cmdMap["pwd"] = PWD;
-    cmdMap["delete"] = DELETE;
-    cmdMap["system"] = SYST;
-}
-
-void ftpClient::runClient()
+void Client::runClient()
 {
     clntSock = Connect(ip, port);
     cout << "Connected to " << ip << "." << endl;
@@ -66,7 +62,7 @@ void ftpClient::runClient()
     }
 }
 
-void ftpClient::runPI()
+void Client::runPI()
 {
 	do {
         cout << "ftp> ";
@@ -97,7 +93,7 @@ void ftpClient::runPI()
 	}
 }
 
-void ftpClient::cmd_help()
+void Client::cmd_help()
 {
     if (instructions.size() == 1) {
         std::cout << "Commands may be abbreviated.  Commands are:" << std::endl;
@@ -143,7 +139,7 @@ void ftpClient::cmd_help()
     }
 }
 
-void ftpClient::cmd_delete()
+void Client::cmd_delete()
 {
     if (!isConnected()) {
         error_Msg("Not connected.");
@@ -169,7 +165,7 @@ void ftpClient::cmd_delete()
     }
 }
 
-void ftpClient::cmd_system()
+void Client::cmd_system()
 {
     if (!isConnected()) {
         error_Msg("Not connected.");
@@ -182,7 +178,7 @@ void ftpClient::cmd_system()
     }
 }
 
-void ftpClient::cmd_get()
+void Client::cmd_get()
 {
 	if (!isConnected()) {
         error_Msg("Not connected.");
@@ -258,7 +254,7 @@ void ftpClient::cmd_get()
     }
 }
 
-void ftpClient::cmd_put()
+void Client::cmd_put()
 {
 	if (!isConnected()) {
         error_Msg("Not connected.");
@@ -340,7 +336,7 @@ void ftpClient::cmd_put()
 	}
 }
 
-void ftpClient::cmd_ls()
+void Client::cmd_ls()
 {
 	if (!isConnected()) {
         error_Msg("Not connected.");
@@ -371,7 +367,7 @@ void ftpClient::cmd_ls()
     }
 }
 
-void ftpClient::cmd_close()
+void Client::cmd_close()
 {
 	if (!isConnected()) {
         error_Msg("Not connected.");
@@ -386,7 +382,7 @@ void ftpClient::cmd_close()
     Disconnect();
 }
 
-void ftpClient::cmd_pwd()
+void Client::cmd_pwd()
 {
 	if (!isConnected()) {
         error_Msg("Not connected.");
@@ -402,7 +398,7 @@ void ftpClient::cmd_pwd()
     // replyCode == 257?
 }
 
-void ftpClient::cmd_open()
+void Client::cmd_open()
 {
     if (isConnected()) {
         error_Msg("Already connected to " + ip + ", use close first.");
@@ -417,7 +413,7 @@ void ftpClient::cmd_open()
     runClient();
 }
 
-void ftpClient::cmd_quit()
+void Client::cmd_quit()
 {
     if (!isConnected()) {
         cmd_close();
@@ -427,7 +423,7 @@ void ftpClient::cmd_quit()
     }
 }
 
-void ftpClient::cmd_cd()
+void Client::cmd_cd()
 {
     if (!isConnected()) {
         error_Msg("Not connected.");
@@ -462,18 +458,20 @@ void ftpClient::cmd_cd()
     }
 }
 
-bool ftpClient::isRunning()
+bool Client::isRunning()
 {
 	return running;
 }
 
-void ftpClient::Disconnect()
+void Client::Disconnect()
 {
     connected = false;
 	close(clntSock);
 }
 
-bool ftpClient::isConnected()
+bool Client::isConnected()
 {
 	return connected;
+}
+
 }
