@@ -33,6 +33,7 @@ public:
     void setTcpNoDelay(bool on);
     void shutdownWrite();
 
+	int getSock() const;
 private:
     static TcpStreamPtr connectInternal(const InetAddr& serveraddr, const InetAddr* localAddr);
     Socket sock;

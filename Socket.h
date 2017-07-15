@@ -62,7 +62,7 @@ public:
     int write(const void* buf, int len);
 
     static Socket createTCP();
-
+	void closeConn();
 private:
     int sockfd_;
 };

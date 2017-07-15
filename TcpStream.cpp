@@ -97,4 +97,14 @@ TcpStreamPtr TcpStream::connectInternal(const InetAddr& servaddr, const InetAddr
     return stream;
 }
 
+int TcpStream::getSock() const
+{
+	return sock.fd();
+}
+
+void TcpStream::closeConn()
+{
+	sock.closeConn();
+}
+
 }

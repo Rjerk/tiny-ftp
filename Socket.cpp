@@ -112,4 +112,10 @@ Socket Socket::createTCP()
     return Socket(sockfd);
 }
 
+void Socket::closeConn()
+{
+	::close(sockfd);
+	sockfd = -1;
+}
+
 }

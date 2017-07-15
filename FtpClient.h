@@ -10,9 +10,11 @@ namespace ftpclient {
 
 class FtpClient : noncopyable {
 public:
-    explicit FtpClient(const std::string& ip, int16_t port);
+    explicit FtpClient(const std::string& ip, int16_t port = 21);
     ~FtpClient();
-    void run();
+    
+    void run(int argc, char* argv[]);
+    void connectToServer();
 private:
     FtpHandler handler;
     std::string ip_;
