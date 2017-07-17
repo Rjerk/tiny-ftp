@@ -35,10 +35,10 @@ $ make
 If ftp server is ready:
 
 ```
-./ftp 127.0.0.1 21
+./ftp localhost 21
 Connected to 127.0.0.1.
 220 (vsFTPd 3.0.3)
-Name (127.0.0.1:linux): ftp     # Via anonymous login
+Name (127.0.0.1:linux): [user-name]
 331 Please specify the password.
 Password:
 230 Login successful.

@@ -5,8 +5,10 @@
 
 #include <unistd.h>
 #include <cassert>
+#include <cstring>
 
 #include <utility>
+#include <iostream>
 
 namespace ftpclient {
 
@@ -22,10 +24,6 @@ public:
 
     ~Socket()
     {
-        if (sockfd_ >= 0) {
-            int ret = ::close(sockfd_);
-            assert(ret == 0); (void)ret;
-        }
     }
 
     Socket(Socket&& rhs)

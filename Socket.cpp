@@ -96,7 +96,8 @@ InetAddr Socket::getPeerAddr() const
 int Socket::read(void* buf, int len)
 {
     // FIXME: EINTR
-    return ::read(sockfd_, buf, len);
+    int s = ::read(sockfd_, buf, len);
+    return s;
 }
 
 int Socket::write(const void* buf, int len)

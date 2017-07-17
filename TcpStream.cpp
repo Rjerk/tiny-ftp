@@ -4,7 +4,8 @@
 #include <signal.h>
 #include <unistd.h>
 #include <sys/socket.h>
-
+#include <iostream>
+ 
 namespace ftpclient {
 
 namespace {

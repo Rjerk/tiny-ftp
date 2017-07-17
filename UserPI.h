@@ -8,9 +8,8 @@
 #include <iostream>
 #include <sstream>
 
-#include <poll.h>
 #include <unistd.h>
- 
+
 #include "error.h"
 #include "utility.h"
 #include "noncopyable.h"
@@ -28,38 +27,31 @@ namespace ftpclient {
 
 class UserPI : noncopyable {
 public:
-    explicit UserPI();
+    explicit UserPI(const string& ip, int16_t port);
     ~UserPI();
-    
+
     int    getReplyFromServer();
     string getReplyMessage() { return reply_msg; }
     int    getReplyCode() { return reply_code; }
 	bool   loginServer();
 	int    sendServerCmd(const string& cmd);
 
-    void connect(const string& ip, int16_t port);
+    void connect();
 	void closeConn();
 	int getPasvPortFromReply(const string&);
     int openPasvSock(int);
 	void getPasvConn();
     bool isPasvReady();
-    int receiveFile(int);
-    int sendFile(int);
-    int getAsciiMsgFromServer();
-    string getAsciiMsg();
-private:
-    void Configure(string, int);
 private:
     TcpStreamPtr stream;
-    
+    string ip;
+	int16_t port; 
 	int reply_code;
     int pasv_sock;
-	int clnt_sock;
+	int cmd_sock;
 	volatile bool is_pasv;
     string reply_msg;
 	string ascii_msg;
-
-	string ip;
 };
 
 }

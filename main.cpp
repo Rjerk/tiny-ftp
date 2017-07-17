@@ -1,9 +1,10 @@
-#include "FtpClient.h"
-
+#include "FtpHandler.h"
 using namespace ftpclient;
 
-int main(int argc, char* argv[])
+int main()
 {
-	FtpClient* client = nullptr;
-	client->run(argc, argv);
+    FtpHandler handler("localhost", 21);
+    handler.connect();
+    handler.login();
+    handler.runShell();
 }

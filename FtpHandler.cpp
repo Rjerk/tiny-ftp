@@ -1,9 +1,12 @@
 #include "FtpHandler.h"
 #include "InetAddr.h"
 #include "utility.h"
-#include <iomanip>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+
+#include <iomanip>
 
 namespace ftpclient {
 
@@ -19,15 +22,16 @@ std::unordered_map<string, cmdType> cmdMap = {
     { "delete", DELETE }, { "system", SYSTEM }
 };
 
-FtpHandler::FtpHandler(std::string ip, int16_t port)
-    : up(), ud(), ip_(ip), port_(port),
-	is_connected(false), is_running(true), cmd(""), instructions()
+FtpHandler::FtpHandler(const string& ip_, int16_t port_)
+    : up(ip_, port_), ud(ip_, port_), ip(ip_), port(port_),
+	is_running(true), is_connected(false), is_pasv_ready(true), cmd(""), instructions()
 {
 }
 
 void FtpHandler::connect()
 {
-    up.connect(ip_, port_); // open a socket and connect to ftp server.
+    up.connect(); // open a socket and connect to ftp server.
+    cout << "Connected to localhost." << endl;
 }
 
 void FtpHandler::login()
@@ -35,9 +39,8 @@ void FtpHandler::login()
 	if (up.getReplyFromServer() > 0) { // 220 (vsFTPd 3.0.3)
 		cout << up.getReplyMessage();
 	}
-
 	if (up.getReplyCode() == 220) {
-		cout << "Name (" << ip_ << ":" << getUserName() << "): ";
+		cout << "Name (" << ip << ":" << getUserName() << "): ";
         if (up.loginServer()) {
             cout << "Remote system type is UNIX." << endl;
             cout << "Using binary mode to transfer files." << endl;
@@ -48,35 +51,43 @@ void FtpHandler::login()
 	}
 }
 
-void FtpHandler::buildControlConnection()
+void FtpHandler::usePasv()
 {
-	connect();
-	login();
+	if (up.sendServerCmd("PASV") > 0) {
+        if (up.getReplyFromServer() > 0) { // 227 
+   			cout << up.getReplyMessage();
+        }
+    }
+    if (up.getReplyCode() == 227) {
+        int port = up.getPasvPortFromReply(up.getReplyMessage()); // 获得服务器被动打开的端口号
+        int pasv_sock;
+        if ((pasv_sock = ud.openPasvSock(ip, port)) >= 0) { // 客户端建立数据通道监听服务器的数据端口
+            return ;
+        }
+    }
 }
 
 void FtpHandler::runShell()
 {
 	while (isRunning()) {
-
 		do {
 			cout << "ftp> ";
 			getline(cin, cmd);
 		} while (cmd.empty());
 
 		vector<string>().swap(instructions);
-
 	    std::stringstream cmdstring(cmd);
 	    string token;
 	    while (getline(cmdstring, token, ' ')) {
 	    	instructions.push_back(token);
 		}
-	
+
 		switch(cmdMap[instructions[0]]) {
 			case HELP:   cmd_help();    break;
 			case GET:    cmd_get();     break;
 		    case PUT:    cmd_put();     break;
 		    case DELETE: cmd_delete();  break;
-		    case SYSTEM:   cmd_system();  break;
+		    case SYSTEM: cmd_system();  break;
 		  	case LS:     cmd_ls();      break;
 			case PWD:    cmd_pwd();     break;
 		  	case OPEN:   cmd_open();    break;
@@ -85,28 +96,7 @@ void FtpHandler::runShell()
 		    case CD:     cmd_cd();      break;
 			default:     error_Msg("?Invalid command");
 		}
-		
 	}
-}
-
-void FtpHandler::buildDataTrassfer()
-{
-	if (up.sendServerCmd("PASV") > 0) {
-        if (up.getReplyFromServer() == 0) {
-            is_pasv_ready = false;
-            return ;
-        }
-    }
-
-    if (up.getReplyCode() == 227) {
-        int port = up.getPasvPortFromReply(up.getReplyMessage()); // 获得服务器被动打开的端口号 
-        int pasv_sock;
-        if ((pasv_sock = ud.openPasvSock(port)) >= 0) { // 客户端建立数据通道监听服务器的数据端口 
-            is_pasv_ready = true;
-            return ;
-        }
-    }
-    is_pasv_ready = false;
 }
 
 void FtpHandler::cmd_help()
@@ -213,22 +203,19 @@ void FtpHandler::cmd_get()
         error_Msg("usage: get remote-file [ local-file ]");
         return ;
     }
+
     cout << "local: " << localfile << " remote: " << remotefile << endl;
+    usePasv();
 
     if (up.sendServerCmd("TYPE I") > 0) {
         if (up.getReplyFromServer() > 0) {
-            assert(up.getReplyCode() == 200);
+            cout << up.getReplyMessage(); 
         }
     }
 
-    string reply_msg = up.getReplyMessage();
     if (up.getReplyCode() != 200) {
-        error_Msg(reply_msg);
         return ;
     }
-
-    if (!isPasvReady())
-        return ;
 
     if (up.sendServerCmd("RETR " + remotefile) > 0) {
         if (up.getReplyFromServer() > 0) {
@@ -239,13 +226,13 @@ void FtpHandler::cmd_get()
 
     if (up.getReplyCode() == 150) {
         int file_sock;
-        if ((file_sock = open(localfile.c_str(), O_WRONLY)) == -1) {
+        if ((file_sock = open(localfile.c_str(), O_CREAT | O_WRONLY, O_WRONLY)) == -1) {
             error_Msg("local: " + localfile + ": Permission denied");
             return ;
         }
         struct timeval start, end;
         gettimeofday(&start, NULL);
-        int s = up.receiveFile(file_sock);
+        int s = ud.receiveFile(file_sock);
         gettimeofday(&end, NULL);
         if (up.getReplyFromServer() > 0) {
 	        // 226 Transfer Complete
@@ -291,20 +278,16 @@ void FtpHandler::cmd_put()
     }
 
     cout << "local: " << localfile << " remote: " << remotefile << endl;
+    usePasv();
 
     if (up.sendServerCmd("TYPE I") > 0) {
         if (up.getReplyFromServer() > 0) {
-        	assert(up.getReplyCode() == 200);
+		    if (up.getReplyCode() != 200) {
+		        error_Msg(up.getReplyMessage());
+		        return ;
+		    }
         }
     }
-    
-    if (up.getReplyCode() != 200) {
-        error_Msg(up.getReplyMessage());
-        return ;
-    }
-
-    if (!isPasvReady())
-        return ;
 
     int file_sock;
 	if ((file_sock = open(localfile.c_str(), O_RDONLY)) == -1) {
@@ -321,7 +304,7 @@ void FtpHandler::cmd_put()
     if (up.getReplyCode() == 150) {
 	    struct timeval start, end;
 		gettimeofday(&start, NULL);
-		int s = up.sendFile(file_sock);
+		int s = ud.sendFile(file_sock);
 		gettimeofday(&end, NULL);
 
 		if (up.getReplyFromServer() > 0) {
@@ -345,17 +328,16 @@ void FtpHandler::cmd_ls()
 {
 	if (!checkConnected())
 		return ;
-
-    if (isPasvReady())
-        return ;
+ 
+    usePasv();
 
     int status = -1;
     int pid;
     if ((pid = fork()) < 0) {
         error_Exit("fork() error!");
     } else if (pid == 0) {
-        if (up.getAsciiMsgFromServer() > 0) {
-            cout << up.getAsciiMsg();
+        if (ud.getAsciiMsgFromServer() > 0) {
+            cout << ud.getAsciiMsg();
         }
         exit(0);
     } else if (pid > 0) {
@@ -392,39 +374,36 @@ void FtpHandler::cmd_pwd()
     if (up.sendServerCmd("PWD") > 0) {
         if (up.getReplyFromServer() > 0) {
             cout << up.getReplyMessage();
-            assert(up.getReplyCode() == 257);
         }
     }
 }
 
 void FtpHandler::cmd_open()
 {
-    if (!checkConnected())
+	if (isConnected()) {
+		error_Msg("Already connected to localhost, use close first.");
 		return ;
-
+	}
 	if (instructions.size() == 1) {
         cout << "(to) ";
-        getline(cin, ip_);
+        getline(cin, ip);
 	} else if (instructions.size() == 2) {
-        ip_ = instructions[1];
+        ip = instructions[1];
     } else if (instructions.size() == 3) {
-    	ip_ = instructions[1];
-    	port_ = std::stoi(instructions[2]);
+    	ip = instructions[1];
+    	port = std::stoi(instructions[2]);
     } else {
     	error_Msg("usage: open host-name [port]");
 	}
 	
-    buildControlConnection();
+	connect();
+	login();
 }
 
 void FtpHandler::cmd_quit()
 {
-    if (!isConnected()) {
-        cmd_close();
-        return ;
-    } else {
-        exit(0);
-    }
+    cmd_close();
+    is_running = false;
 }
 
 void FtpHandler::cmd_cd()

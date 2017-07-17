@@ -17,7 +17,7 @@ using TcpStreamPtr = std::unique_ptr<TcpStream>;
 class TcpStream : noncopyable {
 public:
     TcpStream(Socket&& sock);
-    ~TcpStream() = default;
+    ~TcpStream() { sock.closeConn(); }
     TcpStream(TcpStream&&) = default;
     TcpStream& operator=(TcpStream&&) = default;
 

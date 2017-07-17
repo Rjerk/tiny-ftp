@@ -1,18 +1,34 @@
-objects = main.o ftpClient.o userPI.o error.o utility.o
+objects = main.o FtpHandler.o UserDTP.o UserPI.o \
+		  TcpStream.o InetAddr.o Socket.o  error.o utility.o
 
-flags = -O -Wall -std=c++11
+flags = -std=c++11 -O -Wall -Wextra -Werror -Wold-style-cast
 
 client: $(objects)
-	g++ $(flags) -o client $(objects)
+	g++ $(flags) -o ftp $(objects)
 
 main.o: main.cpp
 	g++ $(flags) -c main.cpp
 
-ftpClient.o: ftpClient.cpp
-	g++ $(flags) -c ftpClient.cpp
+FtpHandler.o: FtpHandler.cpp
+	g++ $(flags) -c FtpHandler.cpp
 
-userPI.o: userPI.cpp 
-	g++ $(flags) -c userPI.cpp
+UserDTP.o: UserDTP.cpp
+	g++ $(flags) -c UserDTP.cpp
+
+UserPI.o: UserPI.cpp 
+	g++ $(flags) -c UserPI.cpp
+
+TcpStream.o: TcpStream.cpp
+	g++ $(flags) -c TcpStream.cpp
+
+Acceptor.o: Acceptor.cpp
+	g++ $(flags) -c Acceptor.cpp
+
+Socket.o: Socket.cpp
+	g++ $(flags) -c Socket.cpp
+
+InetAddr.o: InetAddr.cpp
+	g++ $(flags) -c InetAddr.cpp
 
 utility.o: utility.cpp
 	g++ $(flags) -c utility.cpp
