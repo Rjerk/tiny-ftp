@@ -2,23 +2,6 @@
 
 namespace ftpclient {
 
-int Connect(string _ip, int _port)
-{
-	struct hostent* host = gethostbyname(_ip.c_str());
-    sockaddr_in clntSockAddr;
-    bzero((void*) &clntSockAddr, sizeof(clntSockAddr));
-    clntSockAddr.sin_family = AF_INET;
-    clntSockAddr.sin_addr.s_addr = inet_addr(inet_ntoa(*(struct in_addr*)*host->h_addr_list));
-    clntSockAddr.sin_port = htons(_port);
-
-    int _clntSock = socket(AF_INET, SOCK_STREAM, 0);
-    if (_clntSock == -1)
-        error_Exit("socket() error!");
-    if (connect(_clntSock, (sockaddr*) &clntSockAddr, sizeof(clntSockAddr)) == -1)
-        error_Exit("connect() error!");
-    return _clntSock;
-}
-
 string getUserName()
 {
     struct utmp current_record;

@@ -4,6 +4,6 @@ using namespace ftpclient;
 
 int main(int argc, char* argv[])
 {
-	FtpClient* client;
+	FtpClient* client = nullptr;
 	client->run(argc, argv);
 }

@@ -38,6 +38,7 @@ int UserPI::getReplyFromServer()
     bzero(buf, sizeof(buf));
     // FIXME: EINTR
     int len = read(CONTROL_PORT, buf, sizeof(buf));
+
 	if (len == -1) {
         error_Exit("read() in getReplyFromServer() error!");
     } else if (len > 0) {
@@ -87,7 +88,7 @@ int UserPI::sendServerCmd(const string& cmd)
     bzero(buf, sizeof(buf));
     strcpy(buf, cmd.c_str());
     strcat(buf, "\r\n");
-    return write(clntSock, buf, len);
+    return write(clnt_sock, buf, len);
 }
 
 // 227 Entering Passive Mode (h1,h2,h3,h4,p1,p2).
@@ -101,31 +102,26 @@ int UserPI::getPasvPortFromReply(const string& msg)
         vs.push_back(token);
     int port1 = 0;
     port1 = std::stoi(vs[vs.size()-2]); // need compile -std=c++11
-    char* p2 = (char*)(vs[vs.size()-1]).c_str();
+    char* p2 = const_cast<char*>((vs[vs.size()-1]).c_str());
     int port2 = 0;
     port2 = atoi(strtok(p2, ")"));
     return 256 * port1 + port2;
 }
 
-int UserPI::openPasvSock(int _port)
-{
-    return Connect(ip, _port);
-}
-
 string UserPI::getAsciiMsg()
 {
-    return asciiMsg;
+    return ascii_msg;
 }
 
-void UserPI::Configure(string _ip, int _clntSock)
+void UserPI::Configure(string ip_, int clnt_sock_)
 {
-	ip = _ip;
-	clntSock = _clntSock;
+	ip = ip_;
+	clnt_sock = clnt_sock_;
 }
 
-bool UserPI::pasvReady()
+bool UserPI::isPasvReady()
 {
-    if (isPasv) {
+    if (is_pasv) {
         cout << "200 PORT command successful." << endl;
         return true;
     } else {
@@ -137,75 +133,75 @@ bool UserPI::pasvReady()
 int UserPI::getAsciiMsgFromServer()
 {
     struct pollfd ufds;
-    ufds.fd = pasvSock;
+    ufds.fd = pasv_sock;
     ufds.events = POLLIN; // There is data to read
     ufds.revents = 0;
-    asciiMsg.clear();
+    ascii_msg.clear();
 
     char buf[1024];
     int len = 0;
     int total = 0;
     while (poll(&ufds, 1, 1000) > 0) {
         bzero(buf, sizeof(buf));
-        len = read(pasvSock, (char*)&buf, sizeof(buf));
+        len = read(pasv_sock, static_cast<void*>(&buf), sizeof(buf));
         if (len == 0) break;
-        asciiMsg.append(buf);
+        ascii_msg.append(buf);
         total += len;
     }
-    close(pasvSock);
+    close(pasv_sock);
     return total;
 }
 
-int UserPI::receiveFile(int fileSock)
+int UserPI::receiveFile(int fd)
 {
 	struct pollfd ufds;
-    ufds.fd = pasvSock;
+    ufds.fd = pasv_sock;
     ufds.events = POLLIN; // There is data to read
     ufds.revents = 0;
-    asciiMsg.clear();
+    ascii_msg.clear();
 
     char buf[1024];
     int len = 0;
     int total = 0;
     while (poll(&ufds, 1, 1000) > 0) {
         bzero(buf, sizeof(buf));
-        if ((len = read(pasvSock, (char*)&buf, sizeof(buf))) == -1) {
+        if ((len = read(pasv_sock, static_cast<void*>(&buf), sizeof(buf))) == -1) {
         	error_Exit("read() error in receiveFile().");
 		}
         if (len == 0) break;
-        lseek(fileSock, 0, SEEK_END);
-        if (write(fileSock, buf, len) == -1) {
+        lseek(fd, 0, SEEK_END);
+        if (write(fd, buf, len) == -1) {
         	error_Exit("write() error in receiveFile().");
     		return -1;
 		}
         total += len;
     }
-    close(pasvSock);
-	close(fileSock);
+    close(pasv_sock);
+	close(fd);
     return total;
 }
 
-int UserPI::sendFile(int fileSock)
+int UserPI::sendFile(int file_sock)
 {
-	int sz = lseek(fileSock, 0, SEEK_END);
-    lseek(fileSock, 0, 0);
+	int sz = lseek(file_sock, 0, SEEK_END);
+    lseek(file_sock, 0, 0);
     char* buf = new char[sz];
-    if (read(fileSock, buf, sz) == -1) {
+    if (read(file_sock, buf, sz) == -1) {
     	error_Exit("read() error in sendFile().");
 	}
-    close(fileSock);
+    close(file_sock);
     int len;
-    if ((len = write(pasvSock, buf, sz)) == -1) {
+    if ((len = write(pasv_sock, buf, sz)) == -1) {
     	error_Exit("write() error in sendFile().");
 	}
     delete [] buf;
-    close(pasvSock);
+    close(pasv_sock);
     return len;
 }
 
 void UserPI::closeConn()
 {
-	
+	stream->closeConn();
 }
 
 }

@@ -4,7 +4,7 @@
 namespace ftpclient {
 
 UserDTP::UserDTP()
-	: pasv_sock(-1)
+	: pasv_sock(-1), is_pasv_ready(false)
 {
 }
 
@@ -21,22 +21,23 @@ int UserDTP::accept(int16_t port)
         return -1;
     }
     pasv_sock = stream->getSock();
+    is_pasv_ready = true;
     return pasv_sock;
 }
 
-void UserDTP::reciveData(int16_t port)
+void UserDTP::reciveData(void* buf, int len)
 {
-
+	stream->receiveAll(buf, len);
 }
 
-void UserDTP::sendData()
+void UserDTP::sendData(const void* buf, int len)
 {
-
+	stream->sendAll(buf, len);
 }
 
 int UserDTP::openPasvSock(int port)
 {
-	return accept(port); 
+	return accept(port);
 }
 
 void UserDTP::closeConn()

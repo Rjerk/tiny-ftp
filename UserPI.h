@@ -26,18 +26,6 @@ using std::vector;
 
 namespace ftpclient {
 
-enum cmdType {
-    HELP, GET, PUT, LS,     OPEN, CLOSE,
-    QUIT, CD,  PWD, DELETE, SYSTEM
-};
-
-std::unordered_map<string, cmdType> cmdMap = {
-    { "help", HELP },     { "get", GET },       { "put", PUT },
-    { "ls", LS },         { "open", OPEN },     { "close", CLOSE },
-    { "quit", QUIT },     { "cd", CD },         { "pwd", PWD },
-    { "delete", DELETE }, { "system", SYSTEM }
-};
-
 class UserPI : noncopyable {
 public:
     explicit UserPI();
@@ -47,20 +35,19 @@ public:
     string getReplyMessage() { return reply_msg; }
     int    getReplyCode() { return reply_code; }
 	bool   loginServer();
-	int    sendServerCmd(const string& cmd)
+	int    sendServerCmd(const string& cmd);
 
     void connect(const string& ip, int16_t port);
 	void closeConn();
-private:
 	int getPasvPortFromReply(const string&);
     int openPasvSock(int);
-    
 	void getPasvConn();
     bool isPasvReady();
-    int getAsciiMsgFromServer();
     int receiveFile(int);
     int sendFile(int);
+    int getAsciiMsgFromServer();
     string getAsciiMsg();
+private:
     void Configure(string, int);
 private:
     TcpStreamPtr stream;

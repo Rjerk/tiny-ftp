@@ -114,8 +114,8 @@ Socket Socket::createTCP()
 
 void Socket::closeConn()
 {
-	::close(sockfd);
-	sockfd = -1;
+	::close(sockfd_);
+	sockfd_ = -1;
 }
 
 }

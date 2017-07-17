@@ -34,6 +34,7 @@ public:
     void shutdownWrite();
 
 	int getSock() const;
+	void closeConn();
 private:
     static TcpStreamPtr connectInternal(const InetAddr& serveraddr, const InetAddr* localAddr);
     Socket sock;

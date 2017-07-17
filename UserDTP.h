@@ -15,14 +15,17 @@ class UserDTP : noncopyable {
 public:
     explicit UserDTP();
     ~UserDTP();
-    void accept(int16_t port);
-    static void reciveData(int16_t port);
-    static void sendData();
+    int accept(int16_t port);
+    void reciveData(void* buf, int len);
+    void sendData(const void* buf, int len);
+
 	int openPasvSock(int port);
+	bool isPasvReady() { return is_pasv_ready; }
 	void closeConn();
 private:
     TcpStreamPtr stream;
     int pasv_sock;
+    bool is_pasv_ready;
 };
 
 }

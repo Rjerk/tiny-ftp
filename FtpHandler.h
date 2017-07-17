@@ -13,7 +13,8 @@ public:
     void connect();
     void login();
     void buildControlConnection();
-    void buildDataTrassfer(); 
+    void buildDataTrassfer();
+    void runShell();
 private:
 	void cmd_help();
     void cmd_get();
@@ -30,6 +31,7 @@ private:
     bool isConnected() { return is_connected; }
     bool isRunning() { return is_running; } 
     void Disconnect() { is_connected = false; up.closeConn(); ud.closeConn(); } // undo : fix disconnected.
+    bool isPasvReady() { return is_pasv_ready; }
     bool checkConnected();
 private:
     UserPI up;
@@ -38,7 +40,7 @@ private:
     int16_t port_;
     volatile bool is_connected;
     volatile bool is_running; 
-    volatile bool is_pasv_conn;
+    volatile bool is_pasv_ready;
     string cmd;
     std::vector<string> instructions;
 };
