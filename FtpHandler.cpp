@@ -76,6 +76,7 @@ void FtpHandler::usePasv()
 
 void FtpHandler::runShell()
 {
+    signal(SIGINT, SIG_IGN);
 	while (isRunning()) {
 		do {
 			cout << "ftp> ";
