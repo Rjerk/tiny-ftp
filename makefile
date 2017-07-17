@@ -39,4 +39,4 @@ error.o: error.cpp
 .PHONY: clean
 
 clean:
-	rm -f client $(objects)
+	rm -f ftp $(objects)

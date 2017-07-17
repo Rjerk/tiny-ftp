@@ -8,13 +8,14 @@ namespace ftpclient {
 
 class FtpHandler : noncopyable {
 public:
-    explicit FtpHandler(const string& ip, int16_t port);
+    explicit FtpHandler(const string& ip = "localhost", int16_t port = 21);
 	~FtpHandler() { }
+    void connectAndRun();
+    void runShell();
+private:
     void connect();
     void login();
     void usePasv();
-    void runShell();
-private:
 	void cmd_help();
     void cmd_get();
     void cmd_put();
@@ -30,7 +31,6 @@ private:
     bool isConnected() { return is_connected; }
     bool isRunning() { return is_running; }
     void Disconnect() { is_connected = false; up.closeConn(); ud.closeConn(); }
-    bool isPasvReady() { return is_pasv_ready; }
     bool checkConnected();
 private:
     UserPI up;
@@ -39,7 +39,6 @@ private:
     int16_t port;
     volatile bool is_running;
     bool is_connected;
-    bool is_pasv_ready;
     string cmd;
     std::vector<string> instructions;
 };

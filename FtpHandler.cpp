@@ -24,8 +24,15 @@ std::unordered_map<string, cmdType> cmdMap = {
 
 FtpHandler::FtpHandler(const string& ip_, int16_t port_)
     : up(ip_, port_), ud(ip_, port_), ip(ip_), port(port_),
-	is_running(true), is_connected(false), is_pasv_ready(true), cmd(""), instructions()
+	is_running(true), is_connected(false), cmd(""), instructions()
 {
+}
+
+void FtpHandler::connectAndRun()
+{
+    connect();
+    login();
+    runShell();
 }
 
 void FtpHandler::connect()
@@ -54,7 +61,7 @@ void FtpHandler::login()
 void FtpHandler::usePasv()
 {
 	if (up.sendServerCmd("PASV") > 0) {
-        if (up.getReplyFromServer() > 0) { // 227 
+        if (up.getReplyFromServer() > 0) { // 227
    			cout << up.getReplyMessage();
         }
     }
@@ -209,7 +216,7 @@ void FtpHandler::cmd_get()
 
     if (up.sendServerCmd("TYPE I") > 0) {
         if (up.getReplyFromServer() > 0) {
-            cout << up.getReplyMessage(); 
+            cout << up.getReplyMessage();
         }
     }
 
@@ -328,7 +335,7 @@ void FtpHandler::cmd_ls()
 {
 	if (!checkConnected())
 		return ;
- 
+
     usePasv();
 
     int status = -1;
@@ -395,7 +402,7 @@ void FtpHandler::cmd_open()
     } else {
     	error_Msg("usage: open host-name [port]");
 	}
-	
+
 	connect();
 	login();
 }
