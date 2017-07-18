@@ -1,7 +1,7 @@
 #ifndef COPYABLE_H
 #define COPYABLE_H
 
-namespace ftpclient {
+namespace ftp {
 
 class copyable {
 protected:

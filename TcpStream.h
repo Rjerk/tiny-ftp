@@ -8,7 +8,7 @@
 #include <memory>
 #include <string>
 
-namespace ftpclient {
+namespace ftp {
 
 class Socket;
 class TcpStream;

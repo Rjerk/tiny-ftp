@@ -1,6 +1,7 @@
 #include "FtpHandler.h"
 #include <cstdlib>
 
+using namespace ftp;
 using namespace ftpclient;
 
 int main(int argc, char* argv[])

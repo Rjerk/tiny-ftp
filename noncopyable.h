@@ -1,7 +1,7 @@
 #ifndef NONCOPYABLE_H
 #define NONCOPYABLE_H
 
-namespace ftpclient {
+namespace ftp {
 
 class noncopyable {
 protected:

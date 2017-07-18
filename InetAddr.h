@@ -11,7 +11,7 @@
 
 using std::string;
 
-namespace ftpclient {
+namespace ftp {
 
 class InetAddr : copyable {
 public:

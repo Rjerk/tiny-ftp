@@ -10,7 +10,7 @@
 #include <utility>
 #include <iostream>
 
-namespace ftpclient {
+namespace ftp {
 
 class InetAddr;
 

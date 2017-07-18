@@ -5,7 +5,11 @@
 #include <iostream>
 #include <cstdlib>
 
+namespace ftp {
+
 void error_Exit(const std::string&);
 void error_Msg(const std::string&);
+
+}
 
 #endif

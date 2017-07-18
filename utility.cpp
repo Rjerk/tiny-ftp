@@ -1,6 +1,6 @@
 #include "utility.h"
 
-namespace ftpclient {
+namespace ftp {
 
 string getUserName()
 {

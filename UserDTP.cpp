@@ -2,10 +2,11 @@
 #include <poll.h>
 #include <unistd.h>
 
-namespace ftpclient {
+using namespace ftp;
+using namespace ftpclient;
 
 UserDTP::UserDTP(const string& ip_, int16_t port_)
-	: ip(ip_), port(port_), pasv_sock(-1)
+	: port(port_), pasv_sock(-1), ip(ip_), ascii_msg("")
 {
 }
 
@@ -18,14 +19,12 @@ int UserDTP::connect(const string& ip_, int16_t port_)
 	InetAddr addr(port_);
     if (!InetAddr::resolve(ip_, &addr)) {
         error_Exit("Unable to resolve" + ip_);
-        is_pasv_ready = false;
         return -1;
     }
 
     stream = TcpStream::connect(addr);
     if (!stream) {
         error_Exit("Unable to connect " + addr.toIpPort());
-        is_pasv_ready = false;
         return -1;
     }
     pasv_sock = stream->getSock();
@@ -125,4 +124,3 @@ void UserDTP::closeConn()
 	stream->closeConn();
 }
 
-}

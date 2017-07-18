@@ -8,7 +8,8 @@
 
 #include <iomanip>
 
-namespace ftpclient {
+using namespace ftp;
+using namespace ftpclient;
 
 enum cmdType {
     HELP, GET, PUT, LS,     OPEN, CLOSE,
@@ -47,7 +48,7 @@ void FtpHandler::login()
 		cout << up.getReplyMessage();
 	}
 	if (up.getReplyCode() == 220) {
-		cout << "Name (" << ip << ":" << getUserName() << "): ";
+		cout << "Name (" << ip << ":" << ftp::getUserName() << "): ";
         if (up.loginServer()) {
             cout << "Remote system type is UNIX." << endl;
             cout << "Using binary mode to transfer files." << endl;
@@ -448,4 +449,3 @@ bool FtpHandler::checkConnected()
    	return true;
 }
 
-}

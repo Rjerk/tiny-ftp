@@ -6,7 +6,7 @@
 #include <sys/socket.h>
 #include <iostream>
  
-namespace ftpclient {
+using namespace ftp;
 
 namespace {
 
@@ -108,4 +108,3 @@ void TcpStream::closeConn()
 	sock.closeConn();
 }
 
-}

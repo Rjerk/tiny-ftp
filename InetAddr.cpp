@@ -6,7 +6,7 @@
 #include <string.h> // bzero
 #include <arpa/inet.h>
 
-namespace ftpclient {
+using namespace ftp;
 
 InetAddr::InetAddr(uint16_t port, bool loop_back_only)
 {
@@ -85,4 +85,3 @@ bool InetAddr::resolve(std::string hostname, InetAddr* out)
     }
 }
 
-}

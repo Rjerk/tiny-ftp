@@ -13,7 +13,6 @@
 #include "error.h"
 #include "utility.h"
 #include "noncopyable.h"
-#include "InetAddr.h"
 #include "TcpStream.h"
 
 using std::string;
@@ -22,6 +21,8 @@ using std::cout;
 using std::endl;
 using std::cerr;
 using std::vector;
+
+namespace ftp {
 
 namespace ftpclient {
 
@@ -47,12 +48,11 @@ private:
     string ip;
 	int16_t port; 
 	int reply_code;
-    int pasv_sock;
-	int cmd_sock;
-	volatile bool is_pasv;
     string reply_msg;
 	string ascii_msg;
 };
+
+}
 
 }
 

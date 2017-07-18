@@ -7,7 +7,7 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 
-namespace ftpclient {
+using namespace ftp;
 
 using SA = struct sockaddr;
 
@@ -119,4 +119,3 @@ void Socket::closeConn()
 	sockfd_ = -1;
 }
 
-}

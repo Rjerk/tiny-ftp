@@ -4,6 +4,8 @@
 #include "UserPI.h"
 #include "UserDTP.h"
 
+namespace ftp {
+
 namespace ftpclient {
 
 class FtpHandler : noncopyable {
@@ -37,12 +39,13 @@ private:
     UserDTP ud;
     std::string ip;
     int16_t port;
-    volatile bool is_running;
+    bool is_running;
     bool is_connected;
     string cmd;
     std::vector<string> instructions;
 };
 
+}
 
 }
 

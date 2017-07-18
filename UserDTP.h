@@ -9,6 +9,8 @@
 
 using std::string;
 
+namespace ftp {
+
 namespace ftpclient {
 
 class UserDTP : noncopyable {
@@ -28,12 +30,13 @@ public:
 	void closeConn();
 private:
     TcpStreamPtr stream;
-    string ip;
-    string ascii_msg;
     int16_t port;
     int pasv_sock;
-    bool is_pasv_ready;
+    string ip;
+    string ascii_msg;
 };
+
+}
 
 }
 

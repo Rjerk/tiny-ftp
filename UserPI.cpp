@@ -1,10 +1,11 @@
 #include "UserPI.h"
 
-namespace ftpclient {
+using namespace ftp;
+using namespace ftpclient;
 
 UserPI::UserPI(const string& ip_, int16_t port_)
-	: stream(nullptr), ip(ip_), port(port_), reply_code(-1), pasv_sock(-1),
-      cmd_sock(-1), is_pasv(false), reply_msg(""), ascii_msg("")
+	: stream(nullptr), ip(ip_), port(port_),
+	  reply_code(-1), reply_msg(""), ascii_msg("")
 {
 }
 
@@ -25,7 +26,6 @@ void UserPI::connect()
         error_Exit("Unable to connect " + addr.toIpPort());
         return ;
     }
-    cmd_sock = stream->getSock();
 }
 
 bool UserPI::loginServer()
@@ -41,7 +41,6 @@ bool UserPI::loginServer()
     if (sendServerCmd("USER " + username) > 0) {
         if (getReplyFromServer() > 0) { // reply: 331 Please specify the password.
             cout << getReplyMessage();
-            assert(reply_code == 331);
         }
     }
 
@@ -55,7 +54,6 @@ bool UserPI::loginServer()
         if (sendServerCmd("PASS " + password) > 0) {
             if (getReplyFromServer() > 0) { // reply: 230 Login Successful.
                 cout << getReplyMessage();
-                assert(getReplyCode() == 230);
                 return getReplyCode() == 230;
             }
         }
@@ -106,20 +104,8 @@ int UserPI::getPasvPortFromReply(const string& msg)
     return 256 * port1 + port2;
 }
 
-bool UserPI::isPasvReady()
-{
-    if (is_pasv) {
-        cout << "200 PORT command successful." << endl;
-        return true;
-    } else {
-        cout << "Passive mode is not ready." << endl;
-        return false;
-    }
-}
-
 void UserPI::closeConn()
 {
 	stream->closeConn();
 }
 
-}

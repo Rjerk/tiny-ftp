@@ -14,7 +14,7 @@
 #include <cstdio>
 #include "error.h"
 
-namespace ftpclient {
+namespace ftp {
 
 using std::string;
 
