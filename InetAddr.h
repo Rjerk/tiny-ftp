@@ -2,7 +2,6 @@
 #define INETADDR_H
 
 #include "copyable.h"
-#include "error.h"
 
 #include <string>
 #include <vector>

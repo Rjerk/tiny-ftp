@@ -1,50 +1,32 @@
-# A simple ftp client using cpp.
-
-## Command:
-
-- ls
-- pwd
-- get
-- cd
-- help
-- put
-- open
-- close
-- quit
-- delete
-- system
-
-## TODO:
-
-- mkdir
-- rmdir
-- rename
-- ...
-- more and more
+# A simple ftp using cpp.
 
 ## Build
 
 ```
-$ git clone https://github.com/Rjerk/ftp-client.git
-$ cd ftp-client
+$ git clone https://github.com/Rjerk/tiny-ftp.git
+$ cd tiny-ftp
 $ make
 ```
 
 ## Run && Login
 
-If ftp server is ready:
-
+run ftp-server
 ```
-./ftp localhost 21
-Connected to 127.0.0.1.
-220 (vsFTPd 3.0.3)
-Name (127.0.0.1:linux): [user-name]
+./ftpserver 2100
+```
+
+run ftp-client
+```
+./ftp localhost 2100
+Connected to localhost.
+220 (rftp 0.1)
+Name (localhost:lan): sam
 331 Please specify the password.
 Password:
 230 Login successful.
 Remote system type is UNIX.
 Using binary mode to transfer files.
-ftp>
+ftp> 
 ```
 
 ## Command Usage

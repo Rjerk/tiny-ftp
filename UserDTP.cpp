@@ -1,4 +1,5 @@
 #include "UserDTP.h"
+#include "error.h"
 #include <poll.h>
 #include <unistd.h>
 
@@ -12,6 +13,7 @@ UserDTP::UserDTP(const string& ip_, int16_t port_)
 
 UserDTP::~UserDTP()
 {
+	closeConn();
 }
 
 int UserDTP::connect(const string& ip_, int16_t port_)

@@ -7,6 +7,8 @@
 #include <netinet/tcp.h>
 #include <sys/socket.h>
 
+#include <iostream>
+
 using namespace ftp;
 
 using SA = struct sockaddr;
@@ -115,7 +117,9 @@ Socket Socket::createTCP()
 
 void Socket::closeConn()
 {
-	::close(sockfd_);
+	if (::close(sockfd_)) {
+		perror("Socket::closeConn");
+	}
 	sockfd_ = -1;
 }
 

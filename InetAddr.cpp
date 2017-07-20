@@ -1,9 +1,9 @@
 #include "InetAddr.h"
 
 #include <cassert>
-#include <netdb.h>
 #include <cstring>
-#include <string.h> // bzero
+#include <netdb.h>
+#include <strings.h> // bzero
 #include <arpa/inet.h>
 
 using namespace ftp;

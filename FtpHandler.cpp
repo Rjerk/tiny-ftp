@@ -11,17 +11,21 @@
 using namespace ftp;
 using namespace ftpclient;
 
-enum cmdType {
+namespace {
+
+enum class cmdType {
     HELP, GET, PUT, LS,     OPEN, CLOSE,
     QUIT, CD,  PWD, DELETE, SYSTEM
 };
 
 std::unordered_map<string, cmdType> cmdMap = {
-    { "help", HELP },     { "get", GET },       { "put", PUT },
-    { "ls", LS },         { "open", OPEN },     { "close", CLOSE },
-    { "quit", QUIT },     { "cd", CD },         { "pwd", PWD },
-    { "delete", DELETE }, { "system", SYSTEM }
+    { "help", cmdType::HELP },     { "get", cmdType::GET },       { "put", cmdType::PUT },
+    { "ls", cmdType::LS },         { "open", cmdType::OPEN },     { "close", cmdType::CLOSE },
+    { "quit", cmdType::QUIT },     { "cd", cmdType::CD },         { "pwd", cmdType::PWD },
+    { "delete", cmdType::DELETE }, { "system", cmdType::SYSTEM }
 };
+
+}
 
 FtpHandler::FtpHandler(const string& ip_, int16_t port_)
     : up(ip_, port_), ud(ip_, port_), ip(ip_), port(port_),
@@ -50,11 +54,13 @@ void FtpHandler::login()
 	if (up.getReplyCode() == 220) {
 		cout << "Name (" << ip << ":" << ftp::getUserName() << "): ";
         if (up.loginServer()) {
+        	// TODO: get system type from server.
             cout << "Remote system type is UNIX." << endl;
             cout << "Using binary mode to transfer files." << endl;
             is_connected = true;
         } else {
             cout << "Login failed." << endl;
+            is_connected = false;
         }
 	}
 }
@@ -67,9 +73,9 @@ void FtpHandler::usePasv()
         }
     }
     if (up.getReplyCode() == 227) {
-        int port = up.getPasvPortFromReply(up.getReplyMessage()); // 获得服务器被动打开的端口号
+        int port = up.getPasvPortFromReply(up.getReplyMessage()); // get port from server.
         int pasv_sock;
-        if ((pasv_sock = ud.openPasvSock(ip, port)) >= 0) { // 客户端建立数据通道监听服务器的数据端口
+        if ((pasv_sock = ud.openPasvSock(ip, port)) >= 0) { // build data channel.
             return ;
         }
     }
@@ -90,20 +96,23 @@ void FtpHandler::runShell()
 	    while (getline(cmdstring, token, ' ')) {
 	    	instructions.push_back(token);
 		}
-
+		if (cmdMap.count(instructions[0]) == 0) {
+			error_Msg("?Invalid command");
+			continue;
+		}
 		switch(cmdMap[instructions[0]]) {
-			case HELP:   cmd_help();    break;
-			case GET:    cmd_get();     break;
-		    case PUT:    cmd_put();     break;
-		    case DELETE: cmd_delete();  break;
-		    case SYSTEM: cmd_system();  break;
-		  	case LS:     cmd_ls();      break;
-			case PWD:    cmd_pwd();     break;
-		  	case OPEN:   cmd_open();    break;
-		    case CLOSE:  cmd_close();   break;
-			case QUIT:   cmd_quit();    break;
-		    case CD:     cmd_cd();      break;
-			default:     error_Msg("?Invalid command");
+			case cmdType::HELP:   cmd_help();    break;
+			case cmdType::GET:    cmd_get();     break;
+		    case cmdType::PUT:    cmd_put();     break;
+		    case cmdType::DELETE: cmd_delete();  break;
+		    case cmdType::SYSTEM: cmd_system();  break;
+		  	case cmdType::LS:     cmd_ls();      break;
+			case cmdType::PWD:    cmd_pwd();     break;
+		  	case cmdType::OPEN:   cmd_open();    break;
+		    case cmdType::CLOSE:  cmd_close();   break;
+			case cmdType::QUIT:   cmd_quit();    break;
+		    case cmdType::CD:     cmd_cd();      break;
+			default: break;    
 		}
 	}
 }
@@ -115,41 +124,41 @@ void FtpHandler::cmd_help()
         std::cout << "cd\t\tclose\t\tget\t\tdelete\t\tsystem\nhelp\t\tls\t\topen\t\tput\t\tpwd\nquit\n";
     } else if (instructions.size() == 2) {
 	    switch(cmdMap[instructions[1]]) {
-		    case CD:
+		    case cmdType::CD:
 		        cout << "cd\t\tchange remote working directory" << endl;
 		        break;
-		    case CLOSE:
+		    case cmdType::CLOSE:
 		        cout << "close\t\tterminate ftp session" << endl;
 		        break;
-		    case GET:
+		    case cmdType::GET:
 		        cout << "get\t\treceive file" << endl;
 		        break;
-            case DELETE:
+            case cmdType::DELETE:
                 cout << "delete\t\tdelete remote file" << endl;
                 break;
-            case SYSTEM:
+            case cmdType::SYSTEM:
                 cout << "system\t\tshow remote system type" << endl;
                 break;
-		    case HELP:
+		    case cmdType::HELP:
 		        cout << "help\t\tprint local help information" << endl;
 		        break;
-		    case LS:
+		    case cmdType::LS:
 		        cout << "ls\t\tlist contents of remote directory" << endl;
 		        break;
-		    case OPEN:
+		    case cmdType::OPEN:
 		        cout << "open\t\tconnect to remote ftp" << endl;
 		        break;
-		    case PUT:
+		    case cmdType::PUT:
 		        cout << "put\t\tsend one file" << endl;
 		        break;
-		    case PWD:
+		    case cmdType::PWD:
 		        cout << "pwd\t\tprint working directory on remote machine" << endl;
 		        break;
-		    case QUIT:
+		    case cmdType::QUIT:
 		        cout << "quit\t\tterminate ftp session and exit" << endl;
 		        break;
 		    default:
-		        error_Msg("?Invalid help command "+instructions[1]);
+		        error_Msg("?Invalid help command " + instructions[1]);
         }
     }
 }
@@ -411,7 +420,13 @@ void FtpHandler::cmd_open()
 
 void FtpHandler::cmd_quit()
 {
-    cmd_close();
+    if (isConnected()) {
+    	if (up.sendServerCmd("QUIT") > 0) {
+	        if (up.getReplyFromServer() > 0) {
+	            cout << up.getReplyMessage();
+	        }
+    	}
+	}
     is_running = false;
 }
 

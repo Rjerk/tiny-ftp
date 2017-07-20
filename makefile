@@ -1,13 +1,29 @@
-objects = main.o FtpHandler.o UserDTP.o UserPI.o \
+objects = runClient.o FtpHandler.o UserDTP.o UserPI.o \
 		  TcpStream.o InetAddr.o Socket.o  error.o utility.o
+serverobj = runServer.o FtpServer.o ClientConn.o Acceptor.o \
+			TcpStream.o InetAddr.o Socket.o error.o utility.o
 
-flags = -std=c++11 -O -Wall -Wextra -Werror -Wold-style-cast
+flags = -std=c++11 -O -Wall -Wextra -Werror -Wold-style-cast -pthread
+
+all: client server
 
 client: $(objects)
 	g++ $(flags) -o ftp $(objects)
 
-main.o: main.cpp
-	g++ $(flags) -c main.cpp
+server: $(serverobj)
+	g++ $(flags) -o ftpserver $(serverobj)
+
+runServer.o: runServer.cpp
+	g++ $(flags) -c runServer.cpp
+
+FtpServer.o: FtpServer.cpp
+	g++ $(flags) -c FtpServer.cpp
+
+ClientConn.o: ClientConn.cpp
+	g++ $(flags) -c ClientConn.cpp
+
+runClient.o: runClient.cpp
+	g++ $(flags) -c runClient.cpp
 
 FtpHandler.o: FtpHandler.cpp
 	g++ $(flags) -c FtpHandler.cpp
@@ -39,4 +55,4 @@ error.o: error.cpp
 .PHONY: clean
 
 clean:
-	rm -f ftp $(objects)
+	rm -f ftp ftpserver $(objects) $(serverobj)

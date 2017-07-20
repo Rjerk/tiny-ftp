@@ -4,13 +4,15 @@
 #include "UserPI.h"
 #include "UserDTP.h"
 
+#include <iostream>
+
 namespace ftp {
 
 namespace ftpclient {
 
 class FtpHandler : noncopyable {
 public:
-    explicit FtpHandler(const string& ip = "localhost", int16_t port = 21);
+    explicit FtpHandler(const string& ip = "localhost", int16_t port = 2100);
 	~FtpHandler() { }
     void connectAndRun();
     void runShell();
